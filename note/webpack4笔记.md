@@ -582,3 +582,89 @@ entry: glob.sync(path.join(__dirname, './src/*/index.js')),
 
       
 
+## ESLint
+
+* 不重复造轮子，基于 eslint:recommend 配置并改进
+* 能够帮助发现代码错误的规则，全部开启
+* 帮助保持团队的代码风格统一，而不是限制开发体验
+
+| 规则名称                    | 错误级别 | 说明                                                         |
+| --------------------------- | -------- | ------------------------------------------------------------ |
+| for-direction               | error    | for循环的方向要求必须正确                                    |
+| getter-return               | error    | getter必须有返回值，并且禁止返回值为undefined，比如return;   |
+| no-await-in-loop            | off      | 允许在循环里面使用await                                      |
+| no-console                  | off      | 允许在代码里面使用console                                    |
+| no-prototype-builtins       | warn     | 直接调用对象原型链上的方法                                   |
+| valid-jsdoc                 | off      | 函数注释一定要遵守jsdoc规则                                  |
+| no-template-curly-in-string | warn     | 在字符串里面出现{和}进行警告                                 |
+| accessor-pairs              | warn     | getter和setter没有成对出现时给出警告                         |
+| array-callback-return       | error    | 对于数据相关操作函数比如reduce，map，filter等，callback必须有return |
+| block-scoped-var            | error    | 把var关键字看成块级作用域，防止变量提升导致的bug             |
+| class-methods-use-this      | error    | 要求在class里面合理使用this，如果某个方法没有使用this，则应该申明为静态方法 |
+| complexity                  | off      | 关闭代码复杂度控制                                           |
+| default-case                | error    | switch case语句里面一定需要default分支                       |
+
+## 打包库和组件
+
+* 暴露库
+
+  ```js
+  module.exports = {
+      mode: "production",
+      entry: {
+          "large-number": "./src/index.js",
+          "large-number.min": "./src/index.js"
+      },
+      output: {
+          filename: "[name].js",
+          library: "largeNumber",
+          libraryExport: "default",
+          libraryTarget: "umd"
+      }
+  };
+  ```
+
+  library:指定库的全局变量
+
+  libraryTarget:支持库引入的方式
+
+* 指定对.min压缩
+
+  ```js
+  module.exports = {
+      mode: "none",
+      entry: {
+          "large-number": "./src/index.js",
+          "large-number.min": "./src/index.js"
+      },
+      output: {
+          filename: "[name].js",
+          library: "largeNumber",
+          libraryTarget: "umd"
+      },
+      optimization: {
+          minimize: true,
+          minimizer: [
+              new TerserPlugin({
+              	include: /\.min\.js$/,
+              }),
+          ],
+      }
+  };
+  ```
+
+  通过 include 设置只压缩 min.js 结尾的文件
+
+* 设置入口文件
+
+  package.json 的 main 字段为 index.js
+
+  ```js
+  if (process.env.NODE_ENV === "production") {
+  	module.exports = require("./dist/large-number.min.js");
+  } else {
+  	module.exports = require("./dist/large-number.js");
+  }
+  ```
+
+  

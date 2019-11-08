@@ -667,4 +667,57 @@ entry: glob.sync(path.join(__dirname, './src/*/index.js')),
   }
   ```
 
-  
+
+## 构建日志
+
+优化命令行的构建日志，使用 **friendly-errors-webpack-plugin**
+
+```js
+module.exports = {
+    entry: {
+        app: './src/app.js',
+        search: './src/search.js'
+    },
+    output: {
+        filename: '[name][chunkhash:8].js',
+        path: __dirname + '/dist'
+    },
+    plugins: [
+  + 	new FriendlyErrorsWebpackPlugin()
+    ],
+  + stats: 'errors-only'
+};
+```
+
+| Preset        | Alternative | Description                    |
+| ------------- | ----------- | ------------------------------ |
+| "errors-only" | *none*      | 只在发生错误时输出             |
+| "minimal"     | *none*      | 只在发生错误或有新的编译时输出 |
+| "none"        | `false`     | 没有输出                       |
+| "normal"      | `true`      | 标准输出                       |
+| "verbose"     | *none*      | 全部输出                       |
+
+* 判断构建是否成功
+
+  每次构建完成后输入 **echo $?** 获取错误码
+
+* 主动捕获并处理构建错误
+
+  ```js
+  plugins: [
+      function() {
+          this.hooks.done.tap('done', (stats) => {
+              if (stats.compilation.errors &&
+              stats.compilation.errors.length && 
+              process.argv.indexOf('--watch') == -1){
+                  console.log('build error');
+                  process.exit(1);
+              }
+          })
+      }
+  ]
+  ```
+
+  compiler 在每次构建结束后会触发 done 这个 hook
+
+  process.exit 主动处理构建报错
